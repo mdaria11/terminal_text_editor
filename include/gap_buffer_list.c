@@ -58,6 +58,7 @@ int add_text_to_buffer(char *text, struct gap_buffer *buffer)
     strncpy(buffer->buffer + buffer->gap_left, text, strlen(text));
     buffer->gap_left += strlen(text);
     buffer->gap_size -= strlen(text);
+    buffer->char_count += strlen(text);
 
     return 0;
 }
@@ -73,6 +74,7 @@ int add_char_to_buffer(char ch, struct gap_buffer *buffer)
     buffer->buffer[buffer->gap_left] = ch;
     buffer->gap_left++;
     buffer->gap_size--;
+    buffer->char_count++;
 
     return 0;
 }
@@ -92,6 +94,7 @@ int add_char_to_pos_buffer(struct gb_list *list, char ch, int pos_buf)
     return 0;
 }
 
+/* Write the buffers from list to file. */
 int buffers_to_file(struct gb_list *list, FILE *input)
 {
     struct gb_node *flag;
@@ -119,6 +122,20 @@ int buffers_to_file(struct gb_list *list, FILE *input)
     }
 }
 
+struct gap_buffer* buffer_at_pos(struct gb_list *list, int position)
+{
+    struct gb_node *flag;
+    flag = list->head;
+
+    while(position > 0)
+    {
+        flag = flag->next;
+        position--;
+    }
+
+    return flag->buffer;
+}
+
 /* Initializes a new gap_buffer node in the list at position.*/
 int initialize_new_gbuffer(struct gb_list *list, int position)
 {
@@ -128,6 +145,7 @@ int initialize_new_gbuffer(struct gb_list *list, int position)
         return -1;
     }
 
+    // Initialize gap buffer with size 100 
     struct gap_buffer *newBuf;
     newBuf = malloc(sizeof(struct gap_buffer));
     newBuf->buffer = calloc(100, sizeof(char));
@@ -135,7 +153,9 @@ int initialize_new_gbuffer(struct gb_list *list, int position)
     newBuf->gap_left = 0;
     newBuf->gap_right = 99;
     newBuf->size = 100;
+    newBuf->char_count = 0;
 
+    // Add the node in the list
     struct gb_node *newNode;
     newNode = malloc(sizeof(struct gb_node));
     newNode->buffer = newBuf;
@@ -149,14 +169,14 @@ int initialize_new_gbuffer(struct gb_list *list, int position)
         return 0;
     } else
     {
-        int cur_pos = 0;
+        int curr_pos = 0;
         struct gb_node *flag;
         flag = list->head;
 
-        while(cur_pos < position - 1)
+        while(curr_pos < position - 1)
         {
             flag = flag->next;
-            cur_pos++;
+            curr_pos++;
         }
 
         struct gb_node *next_neigh = flag->next;
@@ -168,6 +188,7 @@ int initialize_new_gbuffer(struct gb_list *list, int position)
     }
 }
 
+/* Initializing list with head NULL and length 0*/
 int initialize_list(struct gb_list *list)
 {
     list->head = NULL;
