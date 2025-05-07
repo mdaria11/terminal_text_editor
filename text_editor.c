@@ -67,14 +67,48 @@ void move_cursor_terminal(int offset_x, int offset_y)
     int x, y;
     getyx(stdscr, y, x);  // Get current cursor position
 
-    /* TODO: move cursor only in valid text within terminal.*/
+    // Can't move more than the length of the line.
+    if(x + offset_x > buffer_at_pos(&file_text, y - 2)->char_count)
+    {
+        return;
+    }
 
-    // when moving down, we need to initialize a new line
+    // Text lines start at line 2 in terminal space.
+    if(y + offset_y < 2)
+    {
+        return;
+    }
+
+    // Moving down
     if(offset_y == 1)
     {
-        initialize_new_gbuffer(&file_text, y - 1);
+        if(file_text.length > y - 1) //line exists
+        {
+            if(x > buffer_at_pos(&file_text, y - 1)->char_count)
+            {
+                move(y + offset_y, buffer_at_pos(&file_text, y - 1)->char_count);  // Move to next line
+            } else
+            {
+                move(y + offset_y, x);  // Move to next line at the same index
+            }
+        }
+        
+        return;
+
+    } else if(offset_y == -1) //Moving up
+    {
+        if(x > buffer_at_pos(&file_text, y - 3)->char_count)
+        {
+            move(y + offset_y, buffer_at_pos(&file_text, y - 3)->char_count);  // Move to next line
+        }else
+        {
+            move(y + offset_y, x);  // Move to previous line at the same index
+        }
+        return;
     }
-    move(y + offset_y, x + offset_x);  // Move to next position
+
+    // Move left/right on the line
+    move(y, x + offset_x);  // Move to next position
     refresh();
 }
 
