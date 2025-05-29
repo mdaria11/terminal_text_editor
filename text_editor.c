@@ -90,6 +90,7 @@ void move_cursor_terminal(int offset_x, int offset_y)
             } else
             {
                 move(y + offset_y, x);  // Move to next line at the same index
+                //TODO: update gap in the new buffer
             }
         }
         
@@ -99,15 +100,18 @@ void move_cursor_terminal(int offset_x, int offset_y)
     {
         if(x > buffer_at_pos(&file_text, y - 3)->char_count)
         {
-            move(y + offset_y, buffer_at_pos(&file_text, y - 3)->char_count);  // Move to next line
+            move(y + offset_y, buffer_at_pos(&file_text, y - 3)->char_count);  // Move to previous line
         }else
         {
             move(y + offset_y, x);  // Move to previous line at the same index
+            //TODO: update gap in the new buffer
         }
         return;
     }
 
     // Move left/right on the line
+    //Move the gap
+    move_gap_to_pos(buffer_at_pos(&file_text, y - 2), x + offset_x);
     move(y, x + offset_x);  // Move to next position
     refresh();
 }
@@ -138,6 +142,14 @@ void start_terminal()
             }
         } else if(c == KEY_BACKSPACE)
         {
+            int x, y;
+            getyx(stdscr, y, x);
+            
+            //delete character at cursor position (aka at gap )
+            struct gap_buffer *current_line = buffer_at_pos(&file_text, y-2);
+            delete_char_from_buf(current_line);
+
+            //update terminal
             move_cursor_terminal(-1, 0);
             delch(); //delete character
             refresh();
@@ -153,10 +165,26 @@ void start_terminal()
             int x, y;
             getyx(stdscr, y, x); // y-line x-column (text starts at line 2 - offset from file name)
 
-            /*TODO: Implement inseration at position with x*/
-            add_char_to_pos_buffer(&file_text, (char)c, y - 2);
+            //update terminal screen
+            if(x < buffer_at_pos(&file_text, y-2)->char_count) //the cursor is inserting
+            {
+                int saved_x = x;
+                int saved_y = y;
+                //move characters one place to the right
+                for(int i = buffer_at_pos(&file_text, y-2)->char_count - 1; i >= x; i--)
+                {
+                    char c_aux = mvwinch(stdscr, y, i) & A_CHARTEXT;
+                    move(y, i + 1);
+                    addch(c_aux);
+                }
+                move(saved_y, saved_x); //reset the cursor back to its place
+            }
+
             addch(c);
             refresh();
+
+            //add the character in the text structure
+            add_char_to_pos_buffer(&file_text, (char)c, y - 2);
         }
     }
 }

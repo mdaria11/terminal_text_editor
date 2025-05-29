@@ -29,3 +29,5 @@ int add_char_to_pos_buffer(struct gb_list *list, char ch, int pos_buf); /* Add o
 int free_list(struct gb_list *list); /* Free resources used in list except the list structure itself. */
 int buffers_to_file(struct gb_list *list, FILE *input); /* Writes all characters from the list in the file. */
 struct gap_buffer* buffer_at_pos(struct gb_list *list, int position); /* Returns the buffer at position pos from list. */
+void move_gap_to_pos(struct gap_buffer *buffer, int pos); /* Moves the gap from buffer to the position pos. */
+void delete_char_from_buf(struct gap_buffer *buffer); /* Deletes one character from buffer at position gap_left-1 . */

@@ -12,6 +12,46 @@ void print_buffer_info(struct gap_buffer *buffer)
     printf("\n");
 }
 
+void delete_char_from_buf(struct gap_buffer *buffer)
+{
+    buffer->gap_left--;
+}
+
+void move_gap_to_pos(struct gap_buffer *buffer, int pos)
+{
+    if(buffer->gap_left == pos)
+    {
+        return;
+    }
+
+    if(buffer->gap_left > pos)
+    {
+        int updated_right_index = buffer->gap_right;
+
+        for(int i = buffer->gap_left; i > pos; i--)
+        {
+            buffer->buffer[updated_right_index] = buffer->buffer[i - 1];
+            updated_right_index--;
+        }
+
+        buffer->gap_left = pos;
+        buffer->gap_right = updated_right_index;
+
+    } else
+    {
+        int updated_right_index = buffer->gap_right;
+
+        for(int i = buffer->gap_left; i < pos; i++)
+        {
+            buffer->buffer[i] = buffer->buffer[updated_right_index + 1];
+            updated_right_index++;
+        }
+
+        buffer->gap_left = pos;
+        buffer->gap_right = updated_right_index;
+    }
+}
+
 int grow_gap_for_buffer(struct gap_buffer *buffer)
 {
     size_t gap_added_size = sizeof(char) * 100;
