@@ -62,7 +62,8 @@ int grow_gap_for_buffer(struct gap_buffer *buffer)
     memset(buffer->buffer + buffer->size, 0, gap_added_size);
     new_size = buffer->size + gap_added_size;
 
-    if(buffer->gap_size == 0)
+    // the gap was at the end of the buffer, so no need for moving characters
+    if(buffer->gap_right == buffer->size - 1)
     {
         goto updates;
     }
