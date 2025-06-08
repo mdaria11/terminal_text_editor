@@ -37,10 +37,11 @@ void initialize_terminal()
     keypad(stdscr, TRUE);  /* enable keyboard mapping for special characters*/
     cbreak();       /* take input chars one at a time, no wait for \n */
     noecho();         /* no printing in terminal by itself */
+    use_default_colors();  /* for having access to the default terminal background color*/
 
     // font colors
     init_pair(1, COLOR_BLACK, COLOR_CYAN); // filename/title
-    init_pair(2, COLOR_WHITE, COLOR_BLACK); // default
+    init_pair(2, COLOR_WHITE, -1); // default text color using the terminal background color
 
     // take filename from the FILE structure
     char proclnk[0xFFF];
@@ -73,6 +74,11 @@ void move_cursor_terminal(int offset_x, int offset_y)
         return;
     }
 
+    if(x + offset_x < 0)
+    {
+        return;
+    }
+
     // Text lines start at line 2 in terminal space.
     if(y + offset_y < 2)
     {
@@ -90,7 +96,6 @@ void move_cursor_terminal(int offset_x, int offset_y)
             } else
             {
                 move(y + offset_y, x);  // Move to next line at the same index
-                //TODO: update gap in the new buffer
             }
         }
         
@@ -104,14 +109,11 @@ void move_cursor_terminal(int offset_x, int offset_y)
         }else
         {
             move(y + offset_y, x);  // Move to previous line at the same index
-            //TODO: update gap in the new buffer
         }
         return;
     }
 
     // Move left/right on the line
-    //Move the gap
-    move_gap_to_pos(buffer_at_pos(&file_text, y - 2), x + offset_x);
     move(y, x + offset_x);  // Move to next position
     refresh();
 }
@@ -144,17 +146,28 @@ void start_terminal()
         {
             int x, y;
             getyx(stdscr, y, x);
+
+            if(x == 0)
+            {
+                continue;
+            }
             
-            //delete character at cursor position (aka at gap )
+            //delete character at cursor position (aka at gap)
             struct gap_buffer *current_line = buffer_at_pos(&file_text, y-2);
+            if(x != current_line->gap_left)
+            {
+                move_gap_to_pos(current_line, x);
+            }
             delete_char_from_buf(current_line);
 
             //update terminal
             move_cursor_terminal(-1, 0);
+
             delch(); //delete character
             refresh();
         } else if (c == '\n')
         {
+            //TODO: newline is in the line case + newline is at the end of a line thats not the last one case
             int x, y;
             getyx(stdscr, y, x);
             initialize_new_gbuffer(&file_text, y - 1);
@@ -182,6 +195,12 @@ void start_terminal()
 
             addch(c);
             refresh();
+
+            //update gap if necessary
+            if(x != buffer_at_pos(&file_text, y-2)->gap_left)
+            {
+                move_gap_to_pos(buffer_at_pos(&file_text, y-2), x);
+            }
 
             //add the character in the text structure
             add_char_to_pos_buffer(&file_text, (char)c, y - 2);

@@ -15,6 +15,8 @@ void print_buffer_info(struct gap_buffer *buffer)
 void delete_char_from_buf(struct gap_buffer *buffer)
 {
     buffer->gap_left--;
+    buffer->gap_size++;
+    buffer->char_count--;
 }
 
 void move_gap_to_pos(struct gap_buffer *buffer, int pos)
