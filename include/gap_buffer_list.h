@@ -23,6 +23,7 @@ struct gb_list
 };
 
 int initialize_list(struct gb_list *list); /* Initializing an empty list. */
+void initialize_list_with_file_input(FILE *input, struct gb_list *list); /* Initializing list with gap buffers from input file. MUST call initialize_list() first on list!*/
 int initialize_new_gbuffer(struct gb_list *list, int position); /* Inializing a gap buffer in the list at position.*/
 void print_buffer_info(struct gap_buffer *buffer); /* Prints info relating the buffer*/
 int add_char_to_pos_buffer(struct gb_list *list, char ch, int pos_buf); /* Add one character to the buffer at position pos in list. */

@@ -11,7 +11,7 @@
 #include "./include/gap_buffer_list.h"
 
 FILE *input; // edited file
-struct gb_list file_text;
+struct gb_list file_text; // content of the file
 
 static void finish(int sig)
 {
@@ -123,6 +123,18 @@ void start_terminal()
     initialize_terminal();
     attron(COLOR_PAIR(2));
 
+    // we read text from a file so we need to put it on the terminal as well
+    if(file_text.length > 0)
+    {
+        for(int i = 0; i < file_text.length; i++)
+        {
+            addstr(buffer_at_pos(&file_text, i)->buffer);
+            addch('\n');
+        }
+
+        move(2, 0);
+    }
+
     for (;;)
     {
         int c = getch();     /* refresh, accept single keystroke of input */
@@ -142,6 +154,7 @@ void start_terminal()
                     move_cursor_terminal(1, 0);
                     break;
             }
+
         } else if(c == KEY_BACKSPACE)
         {
             int x, y;
@@ -162,9 +175,9 @@ void start_terminal()
 
             //update terminal
             move_cursor_terminal(-1, 0);
-
             delch(); //delete character
             refresh();
+
         } else if (c == '\n')
         {
             //TODO: newline is in the line case + newline is at the end of a line thats not the last one case
@@ -173,6 +186,7 @@ void start_terminal()
             initialize_new_gbuffer(&file_text, y - 1);
             addch(c);
             refresh();
+
         } else
         {
             int x, y;
@@ -244,16 +258,24 @@ int main(int argc, char** argv)
             }
 
             input = fopen("file.txt", "w"); // open the file
+            /*Initialize the text list and add a gap buffer for line 0.*/
+            initialize_list(&file_text);
+            initialize_new_gbuffer(&file_text, 0);
         }
 
     } else // existing file
     {
+        input = fopen(argv[1], "r");
 
+        if(input == NULL)
+        {
+            printf("File %s doesn't exist.\n", argv[1]);
+            return 1;
+        }
+
+        initialize_list(&file_text);
+        initialize_list_with_file_input(input, &file_text);
     }
-
-    /*Initialize the text list and add a gap buffer for line 0.*/
-    initialize_list(&file_text);
-    initialize_new_gbuffer(&file_text, 0);
 
     start_terminal();
 }

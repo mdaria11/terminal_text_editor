@@ -143,6 +143,8 @@ int buffers_to_file(struct gb_list *list, FILE *input)
     struct gb_node *flag;
     flag = list->head;
 
+    input = freopen(NULL, "w", input);
+
     while(flag != NULL)
     {
         int index = 0;
@@ -160,7 +162,6 @@ int buffers_to_file(struct gb_list *list, FILE *input)
         }
 
         fprintf(input, "\n");
-
         flag = flag->next;
     }
 }
@@ -228,6 +229,21 @@ int initialize_new_gbuffer(struct gb_list *list, int position)
         list->length++;
 
         return 0;
+    }
+}
+
+void initialize_list_with_file_input(FILE *input, struct gb_list *list)
+{
+    char line[100];
+    int line_aux = 0;
+
+    while(fgets(line, 100, input) != NULL)
+    {
+        line[strlen(line) - 1] = '\0';
+        initialize_new_gbuffer(list, line_aux);
+        add_text_to_buffer(line, buffer_at_pos(list, line_aux));
+        line_aux++;
+        memset(line, 0, 100);
     }
 }
 
